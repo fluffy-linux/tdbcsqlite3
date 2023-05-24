@@ -2578,6 +2578,7 @@ test tdbc::sqlite3-19.1 {$connection configure - no args} \
     -match glob \
     -result [list -encoding utf-8 \
 		 -isolation serializable \
+		 -nocase 0 \
 		 -readonly 0 \
 		 -timeout 0]
 
