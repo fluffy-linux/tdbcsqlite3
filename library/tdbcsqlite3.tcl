@@ -32,13 +32,13 @@ namespace eval tdbc::sqlite3 {
     superclass ::tdbc::connection
 
     variable timeout
-    variable keepcase
+    variable preservecase
 
     # The constructor accepts a database name and opens the database.
 
     constructor {databaseName args} {
 	set timeout 0
-	set keepcase 0
+	set preservecase 0
 	if {[llength $args] % 2 != 0} {
 	    set cmd [lrange [info level 0] 0 end-[llength $args]]
 	    return -code error \
@@ -72,7 +72,7 @@ namespace eval tdbc::sqlite3 {
 	    } else {
 		lappend result serializable
 	    }
-	    lappend result -keepcase $keepcase
+	    lappend result -preservecase $preservecase
 	    lappend result -readonly 0
 	    lappend result -timeout $timeout
 	    return $result
@@ -83,7 +83,7 @@ namespace eval tdbc::sqlite3 {
 
 	    set option [lindex $args 0]
 	    if {[catch {::tcl::prefix match -message "option" {
-		-encoding -isolation -keepcase -readonly -timeout
+		-encoding -isolation -preservecase -readonly -timeout
 	    } $option} opt]} {
 		return -code error \
 			-errorcode [list TDBC GENERAL_ERROR HY000 SQLITE3 \
@@ -100,8 +100,8 @@ namespace eval tdbc::sqlite3 {
 			return serializable
 		    }
 		}
-		-keepcase {
-		    return $keepcase
+		-preservecase {
+		    return $preservecase
 		}
 		-readonly {
 		    return 0
@@ -127,7 +127,7 @@ namespace eval tdbc::sqlite3 {
 	foreach {option value} $args {
 
 	    if {[catch {::tcl::prefix match -message "option" {
-		-encoding -isolation -keepcase -readonly -timeout
+		-encoding -isolation -preservecase -readonly -timeout
 	    } $option} opt]} {
 		return -code error \
 			-errorcode [list TDBC GENERAL_ERROR HY000 SQLITE3 \
@@ -166,14 +166,15 @@ namespace eval tdbc::sqlite3 {
 			}
 		    }
 		}
-		-keepcase {
-		    if {![string is integer $value]} {
+		-preservecase {
+		    if {![string is boolean -strict $value]} {
 			return -code error \
 			    -errorcode [list TDBC DATA_EXCEPTION 22018 \
 					    SQLITE3 $value] \
-			    "expected integer but got \"$value\""
+			    "expected boolean but got \"$value\""
 		    }
-		    set keepcase $value
+		    # Normalize boolean value to 0/1
+		    set preservecase [expr {bool($value)}]
 		}
 		-readonly {
 		    if {$value} {
@@ -185,7 +186,7 @@ namespace eval tdbc::sqlite3 {
 		    }
 		}
 		-timeout {
-		    if {![string is integer $value]} {
+		    if {![string is integer -strict $value]} {
 			return -code error \
 			    -errorcode [list TDBC DATA_EXCEPTION 22018 \
 					    SQLITE3 $value] \
@@ -208,7 +209,7 @@ namespace eval tdbc::sqlite3 {
 	    WHERE type IN ('table', 'view')
 	    AND name LIKE :pattern
 	} {
-	    if {!$keepcase} {
+	    if {!$preservecase} {
 		dict set row name [string tolower [dict get $row name]]
 	    }
 	    dict set retval [dict get $row name] $row
@@ -233,7 +234,7 @@ namespace eval tdbc::sqlite3 {
 	    dict for {key value} $origrow {
 		dict set row [string tolower $key] $value
 	    }
-	    if {!$keepcase} {
+	    if {!$preservecase} {
 		dict set row name [string tolower [dict get $row name]]
 	    }
 	    if {![string match $pattern \
