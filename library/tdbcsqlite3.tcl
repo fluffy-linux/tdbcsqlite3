@@ -32,11 +32,13 @@ namespace eval tdbc::sqlite3 {
     superclass ::tdbc::connection
 
     variable timeout
+    variable keepcase
 
     # The constructor accepts a database name and opens the database.
 
     constructor {databaseName args} {
 	set timeout 0
+	set keepcase 0
 	if {[llength $args] % 2 != 0} {
 	    set cmd [lrange [info level 0] 0 end-[llength $args]]
 	    return -code error \
@@ -70,6 +72,7 @@ namespace eval tdbc::sqlite3 {
 	    } else {
 		lappend result serializable
 	    }
+	    lappend result -keepcase $keepcase
 	    lappend result -readonly 0
 	    lappend result -timeout $timeout
 	    return $result
@@ -80,7 +83,7 @@ namespace eval tdbc::sqlite3 {
 
 	    set option [lindex $args 0]
 	    if {[catch {::tcl::prefix match -message "option" {
-		-encoding -isolation -readonly -timeout
+		-encoding -isolation -keepcase -readonly -timeout
 	    } $option} opt]} {
 		return -code error \
 			-errorcode [list TDBC GENERAL_ERROR HY000 SQLITE3 \
@@ -96,6 +99,9 @@ namespace eval tdbc::sqlite3 {
 		    } else {
 			return serializable
 		    }
+		}
+		-keepcase {
+		    return $keepcase
 		}
 		-readonly {
 		    return 0
@@ -120,7 +126,7 @@ namespace eval tdbc::sqlite3 {
 
 	foreach {option value} $args {
 	    if {[catch {::tcl::prefix match -message "option" {
-		-encoding -isolation -readonly -timeout
+		-encoding -isolation -keepcase -readonly -timeout
 	    } $option} opt]} {
 		return -code error \
 			-errorcode [list TDBC GENERAL_ERROR HY000 SQLITE3 \
@@ -159,6 +165,16 @@ namespace eval tdbc::sqlite3 {
 			}
 		    }
 		}
+		-keepcase {
+		    if {![string is boolean -strict $value]} {
+			return -code error \
+			    -errorcode [list TDBC DATA_EXCEPTION 22018 \
+					    SQLITE3 $value] \
+			    "expected boolean but got \"$value\""
+		    }
+		    # Normalize boolean value to 0/1
+		    set keepcase [expr {bool($value)}]
+		}
 		-readonly {
 		    if {$value} {
 			return -code error \
@@ -192,7 +208,9 @@ namespace eval tdbc::sqlite3 {
 	    WHERE type IN ('table', 'view')
 	    AND name LIKE :pattern
 	} {
-	    dict set row name [string tolower [dict get $row name]]
+	    if {!$keepcase} {
+		dict set row name [string tolower [dict get $row name]]
+	    }
 	    dict set retval [dict get $row name] $row
 	}
 	return $retval
@@ -215,8 +233,11 @@ namespace eval tdbc::sqlite3 {
 	    dict for {key value} $origrow {
 		dict set row [string tolower $key] $value
 	    }
-	    dict set row name [string tolower [dict get $row name]]
-	    if {![string match $pattern [dict get $row name]]} {
+	    if {!$keepcase} {
+		dict set row name [string tolower [dict get $row name]]
+	    }
+	    if {![string match $pattern \
+		      [string tolower [dict get $row name]]]} {
 		continue
 	    }
 	    switch -regexp -matchvar info [dict get $row type] {
@@ -341,7 +362,7 @@ namespace eval tdbc::sqlite3 {
 	my foreach row "PRAGMA foreign_key_list($foreignTable)" {
 	    if {(![dict exists $argdict primary])
 		|| ([string tolower [dict get $row table]]
-		    eq [dict get $argdict primary])} {
+		    eq [string tolower [dict get $argdict primary]])} {
 
 		# Construct a dictionary for each key, translating
 		# SQLite names to TDBC ones and converting sequence
