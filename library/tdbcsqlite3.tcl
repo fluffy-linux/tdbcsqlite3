@@ -125,7 +125,6 @@ namespace eval tdbc::sqlite3 {
 	# Set one or more options
 
 	foreach {option value} $args {
-
 	    if {[catch {::tcl::prefix match -message "option" {
 		-encoding -isolation -keepcase -readonly -timeout
 	    } $option} opt]} {
@@ -145,7 +144,7 @@ namespace eval tdbc::sqlite3 {
 		    }
 		}
 		-isolation {
-		    if {[catch {::tcl::prefix match -message "option" {
+		    if {[catch {::tcl::prefix match -message "isolation level" {
 			readuncommitted readcommitted repeatableread
 			serializable readonly
 		    } $value} val]} {
