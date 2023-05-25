@@ -79,33 +79,29 @@ namespace eval tdbc::sqlite3 {
 	    # Query a single option
 
 	    set option [lindex $args 0]
-	    switch -exact -- $option {
-		-e - -en - -enc - -enco - -encod - -encodi - -encodin -
-		-encoding {
+	    if {[catch {::tcl::prefix match -message "option" {
+		-encoding -isolation -readonly -timeout
+	    } $option} opt]} {
+		return -code error \
+			-errorcode [list TDBC GENERAL_ERROR HY000 SQLITE3 \
+					BADOPTION $option] $opt
+	    }
+	    switch -exact -- $opt {
+ 		-encoding {
 		    return utf-8
 		}
-		-i - -is - -iso - -isol - -isola - -isolat - -isolati -
-		-isolatio - -isolation {
+		-isolation {
 		    if {[db onecolumn {PRAGMA read_uncommitted}]} {
 			return readuncommitted
 		    } else {
 			return serializable
 		    }
 		}
-		-r - -re - -rea - -read - -reado - -readon - -readonl -
 		-readonly {
 		    return 0
 		}
-		-t - -ti - -tim - -time - -timeo - -timeou - -timeout {
+		-timeout {
 		    return $timeout
-		}
-		default {
-		    return -code error \
-			-errorcode [list TDBC GENERAL_ERROR HY000 SQLITE3 \
-					BADOPTION $option] \
-			"bad option \"$option\": must be\
-                         -encoding, -isolation, -readonly or -timeout"
-
 		}
 	    }
 
@@ -123,48 +119,46 @@ namespace eval tdbc::sqlite3 {
 	# Set one or more options
 
 	foreach {option value} $args {
-	    switch -exact -- $option {
-		-e - -en - -enc - -enco - -encod - -encodi - -encodin -
+	    if {[catch {::tcl::prefix match -message "option" {
+		-encoding -isolation -readonly -timeout
+	    } $option} opt]} {
+		return -code error \
+			-errorcode [list TDBC GENERAL_ERROR HY000 SQLITE3 \
+					BADOPTION $option] $opt
+	    }
+
+	    switch -exact -- $opt {
 		-encoding {
 		    if {$value ne {utf-8}} {
 			return -code error \
 			    -errorcode [list TDBC FEATURE_NOT_SUPPORTED 0A000 \
 					    SQLITE3 ENCODING] \
-			    "-encoding not supported. SQLite3 is always \
+			    "-encoding not supported. SQLite3 is always\
                              Unicode."
 		    }
 		}
-		-i - -is - -iso - -isol - -isola - -isolat - -isolati -
-		-isolatio - -isolation {
-		    switch -exact -- $value {
-			readu - readun - readunc - readunco - readuncom -
-			readuncomm - readuncommi - readuncommit -
-			readuncommitt - readuncommitte - readuncommitted {
+		-isolation {
+		    if {[catch {::tcl::prefix match -message "isolation level" {
+			readuncommitted readcommitted repeatableread
+			serializable readonly
+		    } $value} val]} {
+			return -code error \
+			    -errorcode [list TDBC GENERAL_ERROR HY000 \
+					    SQLITE3 BADISOLATION $value] \
+			    $val
+		    }
+		    switch -exact -- $val {
+			readuncommitted {
 			    db eval {PRAGMA read_uncommitted = 1}
 			}
-			readc - readco - readcom - readcomm - readcommi -
-			readcommit - readcommitt - readcommitte -
 			readcommitted -
-			rep - repe - repea - repeat - repeata - repeatab -
-			repeatabl - repeatable - repeatabler - repeatablere -
-			repeatablerea - repeatablread -
-			s - se - ser - seri - seria - serial - seriali -
-			serializ - serializa - serializab - serializabl -
+			repeatableread -
 			serializable -
-			reado - readon - readonl - readonly {
+			readonly {
 			    db eval {PRAGMA read_uncommitted = 0}
-			}
-			default {
-			    return -code error \
-				-errorcode [list TDBC GENERAL_ERROR HY000 \
-						SQLITE3 BADISOLATION $value] \
-				"bad isolation level \"$value\":\
-                                should be readuncommitted, readcommitted,\
-                                repeatableread, serializable, or readonly"
 			}
 		    }
 		}
-		-r - -re - -rea - -read - -reado - -readon - -readonl -
 		-readonly {
 		    if {$value} {
 			return -code error \
@@ -174,8 +168,8 @@ namespace eval tdbc::sqlite3 {
                              access"
 		    }
 		}
-		-t - -ti - -tim - -time - -timeo - -timeou - -timeout {
-		    if {![string is integer $value]} {
+		-timeout {
+		    if {![string is integer -strict $value]} {
 			return -code error \
 			    -errorcode [list TDBC DATA_EXCEPTION 22018 \
 					    SQLITE3 $value] \
@@ -183,14 +177,6 @@ namespace eval tdbc::sqlite3 {
 		    }
 		    db timeout $value
 		    set timeout $value
-		}
-		default {
-		    return -code error \
-			-errorcode [list TDBC GENERAL_ERROR HY000 \
-					SQLITE3 BADOPTION $value] \
-			"bad option \"$option\": must be\
-                         -encoding, -isolation, -readonly or -timeout"
-
 		}
 	    }
 	}
@@ -235,7 +221,8 @@ namespace eval tdbc::sqlite3 {
 	    }
 	    switch -regexp -matchvar info [dict get $row type] {
 		{^(.+)\(\s*([[:digit:]]+)\s*,\s*([[:digit:]]+)\s*\)\s*$} {
-		    dict set row type [string tolower [lindex $info 1]]
+		    dict set row type \
+			    [string trim [string tolower [lindex $info 1]]]
 		    dict set row precision [lindex $info 2]
 		    dict set row scale [lindex $info 3]
 		}
