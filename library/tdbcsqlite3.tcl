@@ -90,7 +90,7 @@ namespace eval tdbc::sqlite3 {
 					BADOPTION $option] $opt
 	    }
 	    switch -exact -- $opt {
- 		-encoding {
+		-encoding {
 		    return utf-8
 		}
 		-isolation {
@@ -522,7 +522,7 @@ namespace eval tdbc::sqlite3 {
     # they can't be bind variables.
 
     variable -set {*}{
-	-columns -db -needcolumns -resultArray
+	-columns -db -needcolumns -resultDict
 	-results -sql -Cursor -RowCount -END
     }
 
@@ -530,15 +530,16 @@ namespace eval tdbc::sqlite3 {
 	next
 	set -db [$statement getDBhandle]
 	set -sql [$statement getSql]
-	set -columns {}
-	set -results {}
+	set -columns [list]
+	set -results [list]
+	set -resultDict [dict create]
 	${-db} trace [namespace code {my RecordStatement}]
 	if {[llength $args] == 0} {
 
 	    # Variable substitutions are evaluated in caller's context
 
-	    uplevel 1 [list ${-db} eval ${-sql} \
-			   [namespace which -variable -resultArray] \
+	    uplevel 1 [list ${-db} eval -withoutnulls -asdict ${-sql} \
+			   [namespace which -variable -resultDict] \
 			   [namespace code {my RecordResult}]]
 
 	} elseif {[llength $args] == 1} {
@@ -556,7 +557,7 @@ namespace eval tdbc::sqlite3 {
 	    unset statement
 
 	    dict with -paramDict {
-		${-db} eval ${-sql} -resultArray {
+		${-db} eval -withoutnulls -asdict ${-sql} -resultDict {
 		    my RecordResult
 		}
 	    }
@@ -601,18 +602,18 @@ namespace eval tdbc::sqlite3 {
     # comprising the names of the columns of the result.
 
     method RecordResult {} {
-	set columns ${-resultArray(*)}
 	if {[info exists -needcolumns]} {
+	    set columns [dict get ${-resultDict} *]
 	    lappend -results columns $columns
 	    unset -needcolumns
-	}
-	set dict {}
-	foreach key $columns {
-	    if {[set -resultArray($key)] ne "\ufffd"} {
-		dict set dict $key [set -resultArray($key)]
+	    foreach key [dict keys ${-resultDict}] {
+		if {$key ni $columns} {
+		    set -resultDict [dict remove ${-resultDict} $key]
+		}
 	    }
 	}
-	lappend -results row $dict
+	lappend -results row ${-resultDict}
+	set -resultDict [dict create]
     }
 
     # Advance to the next result set
@@ -631,13 +632,13 @@ namespace eval tdbc::sqlite3 {
 	    set -END {}
 	}
 	if {${-Cursor} >= [llength ${-results}]} {
-	    set -columns {}
+	    set -columns [list]
 	} elseif {[lindex ${-results} ${-Cursor}] eq {columns}} {
 	    incr -Cursor
 	    set -columns [lindex ${-results} ${-Cursor}]
 	    incr -Cursor
 	} else {
-	    set -columns {}
+	    set -columns [list]
 	}
 	return $have
     }
