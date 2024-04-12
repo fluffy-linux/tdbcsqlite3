@@ -253,7 +253,7 @@ install-doc: doc
 test: binaries libraries
 	$(TCLSH) `@CYGPATH@ $(srcdir)/tests/all.tcl` $(TESTFLAGS) \
 	    -load "package ifneeded tdbc::sqlite3 $(PACKAGE_VERSION) \
-		[list source `@CYGPATH@ $(srcdir)/library/tdbcsqlite3.tcl`]"
+		[list source -encoding utf-8 `@CYGPATH@ $(srcdir)/library/tdbcsqlite3.tcl`]"
 
 shell: binaries libraries
 	@$(TCLSH) $(SCRIPT)
@@ -266,7 +266,7 @@ gdb-test: binaries libraries
 	    --args $(TCLSH_PROG) `@CYGPATH@ $(srcdir)/tests/all.tcl` \
 	    $(TESTFLAGS) -singleproc 1 \
 	    -load "package ifneeded tdbc::sqlite3 $(PACKAGE_VERSION) \
-		[list source `@CYGPATH@ $(srcdir)/library/tdbcsqlite3.tcl`]"
+		[list source -encoding utf-8 `@CYGPATH@ $(srcdir)/library/tdbcsqlite3.tcl`]"
 
 valgrind: binaries libraries
 	$(TCLSH_ENV) $(PKG_ENV) $(VALGRIND) $(VALGRINDARGS) $(TCLSH_PROG) \
