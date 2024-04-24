@@ -36,7 +36,7 @@ namespace eval tdbc::sqlite3 {
 	set id unknown
 	catch {
 	    set f [open [file rootname $script].uuid]
-	    set id [read $f]
+	    set id [string trim [read $f]]
 	    close $f
 	}
 	if {[llength $args] > 0} {
