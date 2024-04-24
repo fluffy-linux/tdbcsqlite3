@@ -32,10 +32,15 @@ realclean: hose
 hose: default-hose
 distclean: realclean default-distclean
 
-install-tm:
+$(ROOT)\manifest.uuid:
+   copy $(WIN_DIR)\gitmanifest.in $(ROOT)\manifest.uuid
+   git rev-parse HEAD >>$(ROOT)\manifest.uuid
+
+install-tm:	$(ROOT)\manifest.uuid
 	@echo Installing 'tdbcsqlite3.tcl' file to '$(TM_INSTALL_DIR)\tdbc\sqlite3-$(DOTVERSION).tm'
 	@if not exist "$(TM_INSTALL_DIR)\tdbc" mkdir "$(TM_INSTALL_DIR)\tdbc"
 	@if exist $(LIBDIR) $(COPY) $(LIBDIR)\tdbcsqlite3.tcl "$(TM_INSTALL_DIR)\tdbc\sqlite3-$(DOTVERSION).tm"
+	@$(COPY) $(ROOT)\manifest.uuid "$(TM_INSTALL_DIR)\tdbc\sqlite3-$(DOTVERSION).uuid"
 
 test: default-test
 

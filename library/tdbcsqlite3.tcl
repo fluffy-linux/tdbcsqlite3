@@ -17,6 +17,34 @@ package provide tdbc::sqlite3 1.1.8
 
 namespace eval tdbc::sqlite3 {
     namespace export connection
+    variable script [info script]
+
+    proc build-info args {
+	if {[llength $args] > 0} {
+	    if {[llength $args] > 1} {
+		return -code error "wrong # args: should be \"[lrange [info level 0] 0 end-[llength $args]]\""
+	    }
+	    switch -exact -- [lindex $args 0] {
+		commit {}
+		compiler {return none}
+		patchlevel {return [package provide tdbc::sqlite3]}
+		version {return [join [lrange [split [package provide tdbc::sqlite3] .] 0 1] .]}
+		default {return 0}
+	    }
+	}
+	variable script
+	set id unknown
+	catch {
+	    set f [open [file rootname $script].uuid]
+	    set id [read $f]
+	    close $f
+	}
+	if {[llength $args] > 0} {
+	    return $id
+	} else {
+	    return [package provide tdbc::sqlite3]+$id
+	}
+    }
 }
 
 #------------------------------------------------------------------------------
