@@ -13,7 +13,7 @@
 package require tdbc
 package require sqlite3
 
-package provide tdbc::sqlite3 1.1.8
+package provide tdbc::sqlite3 1.1.9
 
 namespace eval tdbc::sqlite3 {
     namespace export connection
@@ -168,7 +168,7 @@ namespace eval tdbc::sqlite3 {
 			    -errorcode [list TDBC FEATURE_NOT_SUPPORTED 0A000 \
 					    SQLITE3 ENCODING] \
 			    "-encoding not supported. SQLite3 is always\
-                             Unicode."
+			     Unicode."
 		    }
 		}
 		-isolation {
@@ -209,7 +209,7 @@ namespace eval tdbc::sqlite3 {
 			    -errorcode [list TDBC FEATURE_NOT_SUPPORTED 0A000 \
 					    SQLITE3 READONLY] \
 			    "SQLite3's Tcl API does not support read-only\
-                             access"
+			     access"
 		    }
 		}
 		-timeout {
@@ -322,7 +322,7 @@ namespace eval tdbc::sqlite3 {
 	    lappend errorcode wrongNumArgs
 	    return -code error -errorcode $errorcode \
 		"wrong # args: should be [lrange [info level 0] 0 1]\
-                 ?-option value?..."
+		 ?-option value?..."
 	}
 	foreach {key value} $args {
 	    if {$key ni {-primary -foreign}} {
@@ -599,7 +599,7 @@ namespace eval tdbc::sqlite3 {
 		-errorcode [list TDBC GENERAL_ERROR HY000 \
 				SQLITE3 WRONGNUMARGS] \
 		"wrong # args: should be\
-                 [lrange [info level 0] 0 1] statement ?dictionary?"
+		 [lrange [info level 0] 0 1] statement ?dictionary?"
 
 	}
 	${-db} trace {}
