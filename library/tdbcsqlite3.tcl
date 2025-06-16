@@ -13,7 +13,7 @@
 package require tdbc
 package require sqlite3
 
-package provide tdbc::sqlite3 1.1.10
+package provide tdbc::sqlite3 1.1.11
 
 namespace eval tdbc::sqlite3 {
     namespace export connection
