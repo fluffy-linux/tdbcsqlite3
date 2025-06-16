@@ -2675,16 +2675,16 @@ printf "%s\n" "$as_me: WARNING: --with-tcl argument should refer to directory co
 			`ls -d /usr/pkg/lib 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
 			`ls -d /usr/lib64 2>/dev/null` \
+			`ls -d /usr/lib/tcl9.1 2>/dev/null` \
 			`ls -d /usr/lib/tcl9.0 2>/dev/null` \
-			`ls -d /usr/lib/tcl8.7 2>/dev/null` \
 			`ls -d /usr/lib/tcl8.6 2>/dev/null` \
 			`ls -d /usr/lib/tcl8.5 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl9.1 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl9.0 2>/dev/null` \
-			`ls -d /usr/local/lib/tcl8.7 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl8.6 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl8.5 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl/tcl9.1 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl/tcl9.0 2>/dev/null` \
-			`ls -d /usr/local/lib/tcl/tcl8.7 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl/tcl8.6 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl/tcl8.5 2>/dev/null` \
 			; do
@@ -5133,7 +5133,7 @@ fi
 		fi
 		case "x`echo \${VisualStudioVersion}`" in
 		    x1[4-9]*)
-			lflags="${lflags} -nodefaultlib:libucrt.lib"
+			lflags="${lflags} -nodefaultlib:ucrt.lib"
 
     vars="ucrt.lib"
     for i in $vars; do
@@ -5535,11 +5535,15 @@ fi
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
-	CYGWIN_*)
+	CYGWIN_*|MINGW32_*|MINGW64_*|MSYS_*)
 	    SHLIB_CFLAGS=""
 	    SHLIB_LD='${CC} -shared'
 	    SHLIB_SUFFIX=".dll"
-	    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} -Wl,--out-implib,\$@.a"
+	    if test "${TEA_PLATFORM}" = "unix" -a  "${TCL_MAJOR_VERSION}" -gt 8 -a x"${with_tcl8}" = x; then
+		SHLIB_LD_LIBS="${SHLIB_LD_LIBS} -Wl,--out-implib,\$(patsubst cyg%.dll,lib%.dll,\$@).a"
+	    else
+		SHLIB_LD_LIBS="${SHLIB_LD_LIBS} -Wl,--out-implib,\$@.a"
+	    fi
 	    EXEEXT=".exe"
 	    do64bit_ok=yes
 	    CC_SEARCH_FLAGS=""
