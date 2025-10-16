@@ -118,7 +118,7 @@ namespace eval tdbc::sqlite3 {
 					BADOPTION $option] $opt
 	    }
 	    switch -exact -- $opt {
- 		-encoding {
+		-encoding {
 		    return utf-8
 		}
 		-isolation {
@@ -372,10 +372,10 @@ namespace eval tdbc::sqlite3 {
     #             candidates.
     # Results:
     #
-    # 	Returns the list of foreign keys that meed the specified
-    # 	conditions, as a list of dictionaries, each containing the
-    # 	keys, foreignConstraintName, foreignTable, foreignColumn,
-    # 	primaryTable, primaryColumn, and ordinalPosition.  Note that the
+    #	Returns the list of foreign keys that meed the specified
+    #	conditions, as a list of dictionaries, each containing the
+    #	keys, foreignConstraintName, foreignTable, foreignColumn,
+    #	primaryTable, primaryColumn, and ordinalPosition.  Note that the
     #   foreign constraint name is constructed arbitrarily, since SQLite3
     #   does not report this information.
 
