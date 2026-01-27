@@ -60,8 +60,8 @@
 2012-05-07  Kevin B. Kenny  <kennyb@acm.org>
 
 	* library/tdbcsqlite.tcl: Revised the syntax of the 'variable'
-	                          command to avoid tripping over the
-	                          Tcl core changes made for TIP 380.
+				  command to avoid tripping over the
+				  Tcl core changes made for TIP 380.
 
 2011-09-19  Kevin B. Kenny <kennykb@acm.org>
 
@@ -184,17 +184,17 @@
 2009-04-19  Kevin B. Kenny  <kennykb@acm.org>
 
 	* doc/tdbc_sqlite3.n: Added missing documentation for 'new'
-	                      constructors.
+			      constructors.
 
 2009-04-18  Kevin B. Kenny  <kennykb@acm.org>
 
 	* tests/tdbcsqlite3.test: Changed the 'invalid path name' to a
-	                          path name that is more likely actually
-	                          to be invalid. Changed the tests for
-	                          inappropriate access to an array variable
-	                          not to expect failure.
+				  path name that is more likely actually
+				  to be invalid. Changed the tests for
+				  inappropriate access to an array variable
+				  not to expect failure.
 	* doc/tdbc_sqlite3.n: Made changes so that NROFF formatting matches
-	                      the Tcl standard.
+			      the Tcl standard.
 
 2008-04-16  Kevin B. Kenny  <kennykb@acm.org>
 

@@ -2680,28 +2680,28 @@ catch {::db allrows {DROP TABLE a}}
 
 ::db allrows {
     CREATE TABLE a (
-        k1 INTEGER,
-        CONSTRAINT pk_a PRIMARY KEY(k1)
+	k1 INTEGER,
+	CONSTRAINT pk_a PRIMARY KEY(k1)
     )
 }
 
 ::db allrows {
     CREATE TABLE b (
-        k1 INTEGER,
-        k2 INTEGER,
-        CONSTRAINT pk_b PRIMARY KEY(k1, k2),
-        CONSTRAINT fk_b1 FOREIGN KEY (k1) REFERENCES a(k1),
-        CONSTRAINT fk_b2 FOREIGN KEY (k2) REFERENCES a(k1)
+	k1 INTEGER,
+	k2 INTEGER,
+	CONSTRAINT pk_b PRIMARY KEY(k1, k2),
+	CONSTRAINT fk_b1 FOREIGN KEY (k1) REFERENCES a(k1),
+	CONSTRAINT fk_b2 FOREIGN KEY (k2) REFERENCES a(k1)
     )
 }
 
 ::db allrows {
     CREATE TABLE c (
-        p1 INTEGER,
-        p2 INTEGER,
-        CONSTRAINT pk_c PRIMARY KEY(p1, p2),
-        CONSTRAINT fk_c1 FOREIGN KEY (p1) REFERENCES a(k1),
-        CONSTRAINT fk_c2 FOREIGN KEY (p2) REFERENCES a(k1),
+	p1 INTEGER,
+	p2 INTEGER,
+	CONSTRAINT pk_c PRIMARY KEY(p1, p2),
+	CONSTRAINT fk_c1 FOREIGN KEY (p1) REFERENCES a(k1),
+	CONSTRAINT fk_c2 FOREIGN KEY (p2) REFERENCES a(k1),
 	CONSTRAINT fk_cpair FOREIGN KEY (p1,p2) REFERENCES b(k2,k1)
     )
 }
@@ -3006,7 +3006,7 @@ test tdbc::sqlite3-30.3 {Multiple result sets - try to read past end} {*}{
 		    lappend rowsets $rows
 		    if {[$resultset nextresults] == 0} break
 		}
-	        lappend rowsets [catch {$resultset nextresults} msg] $msg
+		lappend rowsets [catch {$resultset nextresults} msg] $msg
 		lappend rowsets [catch {$resultset nextrow foo} msg] $::errorCode
 		set rowsets
 	    } results
