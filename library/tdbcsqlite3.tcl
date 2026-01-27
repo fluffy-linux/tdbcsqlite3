@@ -11,7 +11,10 @@
 #------------------------------------------------------------------------------
 
 package require tdbc
-package require sqlite3
+
+# The -asdict option was added in version 3.51, so require it
+
+package require sqlite3 3.51-
 
 package provide tdbc::sqlite3 1.1.13
 
