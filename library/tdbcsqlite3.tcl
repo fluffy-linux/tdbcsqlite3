@@ -14,14 +14,14 @@ package require tdbc
 
 # The -asdict option was added in version 3.51, so require it
 
-package require sqlite3 3.51-
+package require sqlite3
 
 package provide tdbc::sqlite3 1.1.13
 
 namespace eval tdbc::sqlite3 {
     namespace export connection
     variable script [info script]
-
+    
     proc build-info args {
 	if {[llength $args] > 0} {
 	    if {[llength $args] > 1} {
@@ -543,7 +543,6 @@ namespace eval tdbc::sqlite3 {
 #-------------------------------------------------------------------------------
 
 ::oo::class create ::tdbc::sqlite3::resultset {
-
     superclass ::tdbc::resultset
 
     # The variables of this class all have peculiar names. The reason is
@@ -553,7 +552,7 @@ namespace eval tdbc::sqlite3 {
     # they can't be bind variables.
 
     variable -set {*}{
-	-columns -db -needcolumns -resultDict
+	-columns -db -needcolumns -resultDict -resultArray
 	-results -sql -Cursor -RowCount -END
     }
 
@@ -563,15 +562,25 @@ namespace eval tdbc::sqlite3 {
 	set -sql [$statement getSql]
 	set -columns [list]
 	set -results [list]
-	set -resultDict [dict create]
+	set -resultSetIsDict [package vsatisfies [package present tdbc::sqlite3] 3.51-]
+	if {${-resultSetIsDict}} {
+	    set -resultDict [dict create]
+	}
 	${-db} trace [namespace code {my RecordStatement}]
 	if {[llength $args] == 0} {
 
 	    # Variable substitutions are evaluated in caller's context
-
-	    uplevel 1 [list ${-db} eval -withoutnulls -asdict ${-sql} \
-			   [namespace which -variable -resultDict] \
-			   [namespace code {my RecordResult}]]
+	    
+	    # give argument -dict if SQLite supports it
+	    if {${-resultSetIsDict}} {
+		uplevel 1 [list ${-db} eval -withoutnulls -asdict ${-sql} \
+			[namespace which -variable -resultDict] \
+			[namespace code {my RecordResult}]]
+	    } else {
+		uplevel 1 [list ${-db} eval ${-sql} \
+			[namespace which -variable -resultArray] \
+			[namespace code {my RecordResult}]]
+	    }
 
 	} elseif {[llength $args] == 1} {
 
@@ -587,9 +596,17 @@ namespace eval tdbc::sqlite3 {
 	    unset args
 	    unset statement
 
-	    dict with -paramDict {
-		${-db} eval -withoutnulls -asdict ${-sql} -resultDict {
-		    my RecordResult
+	    if {${-resultSetIsDict}} {
+		dict with -paramDict {
+		    ${-db} eval -withoutnulls -asdict ${-sql} -resultDict {
+			my RecordResult
+		    }
+		}
+	    } else {
+		dict with -paramDict {
+		    ${-db} eval ${-sql} -resultDict {
+			my RecordResult
+		    }
 		}
 	    }
 
@@ -633,18 +650,34 @@ namespace eval tdbc::sqlite3 {
     # comprising the names of the columns of the result.
 
     method RecordResult {} {
-	if {[info exists -needcolumns]} {
-	    set columns [dict get ${-resultDict} *]
-	    lappend -results columns $columns
-	    unset -needcolumns
-	    foreach key [dict keys ${-resultDict}] {
-		if {$key ni $columns} {
-		    set -resultDict [dict remove ${-resultDict} $key]
+	set -resultSetIsDict [package vsatisfies [package present tdbc::sqlite3] 3.51-]
+	if {${-resultSetIsDict}} {
+	    if {[info exists -needcolumns]} {
+		set columns [dict get ${-resultDict} *]
+		lappend -results columns $columns
+		unset -needcolumns
+		foreach key [dict keys ${-resultDict}] {
+		    if {$key ni $columns} {
+			set -resultDict [dict remove ${-resultDict} $key]
+		    }
 		}
 	    }
+	    lappend -results row ${-resultDict}
+	    set -resultDict [dict create]
+	} else {
+	    set columns ${-resultArray(*)}
+	    if {[info exists -needcolumns]} {
+		lappend -results columns $columns
+		unset -needcolumns
+	    }
+	    set dict {}
+	    foreach key $columns {
+		if {[set -resultArray($key)] ne "\ufffd"} {
+		    dict set dict $key [set -resultArray($key)]
+		}
+	    }
+	    lappend -results row $dict
 	}
-	lappend -results row ${-resultDict}
-	set -resultDict [dict create]
     }
 
     # Advance to the next result set
