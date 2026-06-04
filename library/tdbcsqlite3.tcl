@@ -637,7 +637,6 @@ namespace eval tdbc::sqlite3 {
     # comprising the names of the columns of the result.
 
     method RecordResult {} {
-	set -resultSetIsDict [package vsatisfies [package present tdbc::sqlite3] 3.51-]
 	if {[llength ${-useasdict}]} {
 	    if {[info exists -needcolumns]} {
 		set columns [dict get ${-resultDict} *]
