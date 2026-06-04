@@ -553,7 +553,7 @@ namespace eval tdbc::sqlite3 {
 
     variable -set {*}{
 	-columns -db -needcolumns -resultDict -resultArray
-	-results -sql -Cursor -RowCount -END
+	-results -sql -useasdict -Cursor -RowCount -END
     }
 
     constructor {statement args} {
@@ -562,25 +562,21 @@ namespace eval tdbc::sqlite3 {
 	set -sql [$statement getSql]
 	set -columns [list]
 	set -results [list]
-	set -resultSetIsDict [package vsatisfies [package present tdbc::sqlite3] 3.51-]
-	if {${-resultSetIsDict}} {
+	if {[package vsatisfies [package present sqlite3] 3.51-]} {
+	    set -useasdict [list -asdict -withoutnulls]
 	    set -resultDict [dict create]
+	    set outvar [namespace which -variable -resultDict]
+	} else {
+	    set -useasdict [list]
+	    set outvar [namespace which -variable -resultArray]
 	}
 	${-db} trace [namespace code {my RecordStatement}]
 	if {[llength $args] == 0} {
 
 	    # Variable substitutions are evaluated in caller's context
-	    
-	    # give argument -dict if SQLite supports it
-	    if {${-resultSetIsDict}} {
-		uplevel 1 [list ${-db} eval -withoutnulls -asdict ${-sql} \
-			[namespace which -variable -resultDict] \
-			[namespace code {my RecordResult}]]
-	    } else {
-		uplevel 1 [list ${-db} eval ${-sql} \
-			[namespace which -variable -resultArray] \
-			[namespace code {my RecordResult}]]
-	    }
+
+	    uplevel 1 [list ${-db} eval {*}${-useasdict} ${-sql} \
+			    $outvar [namespace code {my RecordResult}]]
 
 	} elseif {[llength $args] == 1} {
 
@@ -596,18 +592,8 @@ namespace eval tdbc::sqlite3 {
 	    unset args
 	    unset statement
 
-	    if {${-resultSetIsDict}} {
-		dict with -paramDict {
-		    ${-db} eval -withoutnulls -asdict ${-sql} -resultDict {
-			my RecordResult
-		    }
-		}
-	    } else {
-		dict with -paramDict {
-		    ${-db} eval ${-sql} -resultDict {
-			my RecordResult
-		    }
-		}
+	    ${-db} eval {*}${-useasdict} ${-sql} -resultDict {
+		my RecordResult
 	    }
 
 	} else {
@@ -651,7 +637,7 @@ namespace eval tdbc::sqlite3 {
 
     method RecordResult {} {
 	set -resultSetIsDict [package vsatisfies [package present tdbc::sqlite3] 3.51-]
-	if {${-resultSetIsDict}} {
+	if {[llength ${-useasdict}]} {
 	    if {[info exists -needcolumns]} {
 		set columns [dict get ${-resultDict} *]
 		lappend -results columns $columns
