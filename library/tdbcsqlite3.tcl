@@ -565,10 +565,10 @@ namespace eval tdbc::sqlite3 {
 	if {[package vsatisfies [package present sqlite3] 3.51-]} {
 	    set -useasdict [list -asdict -withoutnulls]
 	    set -resultDict [dict create]
-	    set outvar [namespace which -variable -resultDict]
+	    set outvar -resultDict
 	} else {
 	    set -useasdict [list]
-	    set outvar [namespace which -variable -resultArray]
+	    set outvar -resultArray
 	}
 	${-db} trace [namespace code {my RecordStatement}]
 	if {[llength $args] == 0} {
@@ -576,7 +576,8 @@ namespace eval tdbc::sqlite3 {
 	    # Variable substitutions are evaluated in caller's context
 
 	    uplevel 1 [list ${-db} eval {*}${-useasdict} ${-sql} \
-			    $outvar [namespace code {my RecordResult}]]
+			    [namespace which -variable $outvar]\
+			    [namespace code {my RecordResult}]]
 
 	} elseif {[llength $args] == 1} {
 
@@ -592,7 +593,7 @@ namespace eval tdbc::sqlite3 {
 	    unset args
 	    unset statement
 
-	    ${-db} eval {*}${-useasdict} ${-sql} -resultDict {
+	    ${-db} eval {*}${-useasdict} ${-sql} $outvar {
 		my RecordResult
 	    }
 
