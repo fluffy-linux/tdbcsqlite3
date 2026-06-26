@@ -593,8 +593,10 @@ namespace eval tdbc::sqlite3 {
 	    unset args
 	    unset statement
 
-	    ${-db} eval {*}${-useasdict} ${-sql} $outvar {
-		my RecordResult
+	    dict with -paramDict {
+		${-db} eval {*}${-useasdict} ${-sql} $outvar {
+		    my RecordResult
+		}
 	    }
 
 	} else {
