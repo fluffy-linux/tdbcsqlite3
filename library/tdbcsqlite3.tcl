@@ -21,7 +21,7 @@ package provide tdbc::sqlite3 1.1.14
 namespace eval tdbc::sqlite3 {
     namespace export connection
     variable script [info script]
-    
+
     proc build-info args {
 	if {[llength $args] > 0} {
 	    if {[llength $args] > 1} {
