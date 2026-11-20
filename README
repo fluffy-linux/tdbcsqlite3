@@ -5,7 +5,7 @@ README: tdbcsqlite3
     database with an in-process server.
 
     TDBC and its drivers are available from a Fossil version control
-    repository at http://tdbc.tcl.tk/
+    repository at https://core.tcl-lang.org/tdbcsqlite3
 
     SQLite3 is available from http://sqlite.org/
 
@@ -18,8 +18,8 @@ scripts for the SQLite3 driver for Tcl Database Connectivity. This
 module, plus TDBC and SQLite3 themselves, allow you to access SQLite3
 databases using a standard application programming interface (API)
 from a Tcl script.  This module is also available from
-http://tdbc.tcl.tk along with the source code of TDBC itself. A bug
-database and Wiki are available at the same location.
+https://core.tcl-lang.org/tdbcsqlite3 along with the source code of
+TDBC itself. A bug database and Wiki are available at the same location.
 
 Tdbc::sqlite3 is a freely-available open source package.  You can do
 virtually anything you like with it, such as modifying it,
